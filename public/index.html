@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Tic Tac Toe!</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" href="styles.css">
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <div class="container-fluid" id="base">
+            <div class="row justify-content-center">
+                <div class="col-lg-6 py-5 text-center">
+                    <h1>Tic Tac Toe!</h1><br/>
+                    <div id="playButton" class="btn btn-primary btn-lg margin-auto" onclick="play()">Spielen!</div>
+                    <h3 class="d-none text-muted my-2" id="status"></h3>
+                    <div id="game" class="d-none container">
+                        <div class="row justify-content-center">
+                            <div class="col-auto mx-1 field" id="f0" onclick="clicked(0)"></div>
+                            <div class="col-auto mx-1 field" id="f1" onclick="clicked(1)"></div>
+                            <div class="col-auto mx-1 field" id="f2" onclick="clicked(2)"></div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-auto mx-1 field" id="f3" onclick="clicked(3)"></div>
+                            <div class="col-auto mx-1 field" id="f4" onclick="clicked(4)"></div>
+                            <div class="col-auto mx-1 field" id="f5" onclick="clicked(5)"></div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-auto mx-1 field" id="f6" onclick="clicked(6)"></div>
+                            <div class="col-auto mx-1 field" id="f7" onclick="clicked(7)"></div>
+                            <div class="col-auto mx-1 field" id="f8" onclick="clicked(8)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var socket = io();
+
+            var currentGame = "";
+            var symbol;
+            var yourTurn;
+
+            socket.on("waiting", (msg)=>{
+                $("#status").removeClass("d-none");
+                $("#status").html("Warte auf einen Gegner...")
+            })
+
+            socket.on("game", (msg)=> {
+                console.log(msg)
+                $("#status").removeClass("d-none");
+                $("#status").html("Spiel gefunden!")
+                $("#game").removeClass("d-none");
+                currentGame = msg.field;
+                if(msg.symbol) symbol = msg.symbol;
+                for(let i = 0; i < currentGame.length; i++) {
+                    $("#f"+i).html("<h4>"+currentGame[i]+"</h4>");
+                }
+                yourTurn = msg.yourTurn;
+                $("#status").html("Spiel gefunden! <br/> Dein Symbol ist "+symbol+".<br/>"+(yourTurn ? "Du bist dran!" : "Warte auf den Zug des Anderen!"))
+            })
+
+            socket.on("gameOver", msg=>{
+                $("#status").html(msg);
+                $("#playButton").removeClass("d-none");
+                currentGame = "";
+            })
+
+            function clicked(x) {
+                if(currentGame[x] != "_") return;
+                if(!yourTurn) return;
+                socket.emit("clicked",x);
+            }
+
+            function play() {
+                $("#game").addClass("d-none");
+                $("#playButton").addClass("d-none");
+                socket.emit("play","play");
+            }
+        </script>
+    </body>
+</html>
